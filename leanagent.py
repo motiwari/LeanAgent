@@ -1,3 +1,4 @@
+import fcntl
 import json
 import os
 import pickle
@@ -506,7 +507,7 @@ def main():
         use_fisher = False
         single_repo = True
         curriculum_learning = True
-        num_repos = 1
+        num_repos = 4
         dynamic_database_json_path = os.path.join(RAID_DIR, DB_FILE_NAME)
 
         lambdas = None
@@ -528,14 +529,18 @@ def main():
         lean_git_repos, repos, updated_repos = get_repos(curriculum_learning, num_repos, dynamic_database_json_path, db)
 
         repo_info_file = os.path.join(DATA_DIR, "repo_info_compatible.json")
-        # All processes wait for the file to be created and then read from it
-        # TODO: Fix with a semaphore or file lock
+        lock_path = f"{repo_info_file}.lock"
         max_attempts = 30
         for attempt in range(max_attempts):
             try:
-                with open(repo_info_file, "r") as f:
-                    repo_info = json.load(f)
-                break
+                with open(lock_path, "a") as lock_handle:
+                    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+                    try:
+                        with open(repo_info_file, "r") as f:
+                            repo_info = json.load(f)
+                        break
+                    finally:
+                        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
             except (json.JSONDecodeError, FileNotFoundError):
                 if attempt == max_attempts - 1:
                     raise Exception(

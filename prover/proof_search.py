@@ -17,7 +17,12 @@ from lean_dojo import (Dojo, DojoCrashError, DojoHardTimeoutError,
                        TimeoutError)
 from loguru import logger
 from ray.util.actor_pool import ActorPool
-from vllm import AsyncEngineArgs, AsyncLLMEngine, RequestOutput, SamplingParams
+try:
+    from vllm import AsyncEngineArgs, AsyncLLMEngine, RequestOutput, SamplingParams
+    VLLM_AVAILABLE = True
+except Exception:
+    AsyncEngineArgs = AsyncLLMEngine = RequestOutput = SamplingParams = None
+    VLLM_AVAILABLE = False
 
 from common import zip_strict
 from generator.model import FixedTacticGenerator, RetrievalAugmentedGenerator

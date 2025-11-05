@@ -10,10 +10,17 @@ from typing import Any, Dict, Generator, List, Optional, Tuple
 import networkx as nx
 import pytorch_lightning as pl
 import torch
-from deepspeed.ops.adam import DeepSpeedCPUAdam, FusedAdam
+try:
+    from deepspeed.ops.adam import DeepSpeedCPUAdam, FusedAdam
+except Exception:
+    DeepSpeedCPUAdam = None
+    FusedAdam = None
 from lean_dojo import Pos
 from loguru import logger
-from pytorch_lightning.strategies.deepspeed import DeepSpeedStrategy
+try:
+    from pytorch_lightning.strategies.deepspeed import DeepSpeedStrategy
+except Exception:
+    class DeepSpeedStrategy: ...  # placeholder so isinstance checks won't explode
 from pytorch_lightning.utilities.deepspeed import \
     convert_zero_checkpoint_to_fp32_state_dict
 from transformers import get_cosine_schedule_with_warmup

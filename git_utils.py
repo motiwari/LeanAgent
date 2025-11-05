@@ -480,6 +480,10 @@ def sort_repositories_by_difficulty(db: DynamicDatabase) -> List[Repository]:
         db.update_repository(repo)
         print(f"Finished {repo.name}")
 
+    if len(all_difficulties) == 0:
+        from loguru import logger
+        logger.warning("No theorem difficulties found; skipping difficulty bucketing.")
+        return []
     percentiles = np.percentile(all_difficulties, [33, 67])
 
     categorized_theorems = defaultdict(lambda: defaultdict(list))
